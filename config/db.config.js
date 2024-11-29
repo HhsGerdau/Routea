@@ -1,7 +1,7 @@
 module.exports = {
-    HOST: "localhost",
+    HOST: "autorack.proxy.rlwy.net",
     USER: "root",
-    PASSWORD: "",
+    PASSWORD: "JTkZZOPReujSkLReRzYDRnDcrpqzfFOW",
     DB: "apiconpaypaylpaquetes",
     dialect: "mysql",
 }
