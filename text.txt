@@ -1,0 +1,321 @@
+//crea una tranferencia con cambio de montoMoneda
+exports.transferir = async (req, res) => {
+    const { beneficiarioId, billeteraOrigenId, monto } = req.body;
+
+    try {
+        const beneficiario = await db.beneficiario.findByPk(beneficiarioId);
+        if (!beneficiario) {
+            return res.status(404).send({ message: "Beneficiario no encontrado" });
+        }
+
+        const billeteraOrigen = await db.billetera.findByPk(billeteraOrigenId, { include: db.moneda });
+        if (!billeteraOrigen) {
+            return res.status(404).send({ message: "Billetera de origen no encontrada" });
+        }
+
+        const billeteraDestino = await db.billetera.findOne({ where: { código: beneficiario.numeroCuenta }, include: db.moneda });
+        if (!billeteraDestino) {
+            return res.status(404).send({ message: "Billetera de destino no encontrada" });
+        }
+
+        const montoFloat = parseFloat(monto);
+        const saldoActualOrigen = parseFloat(billeteraOrigen.saldo);
+
+        if (saldoActualOrigen < montoFloat) {
+            return res.status(400).send({ message: "Saldo insuficiente en la billetera de origen" });
+        }
+
+        // Conversión de moneda si las billeteras tienen monedas diferentes
+        let montoConvertido = montoFloat;
+        if (billeteraOrigen.moneda_id !== billeteraDestino.moneda_id) {
+            const montoEnDolares = montoFloat * parseFloat(billeteraOrigen.moneda.valorUsd);
+            montoConvertido = montoEnDolares / parseFloat(billeteraDestino.moneda.valorUsd);
+        }
+
+        // Crear los movimientos de egreso e ingreso
+        const movimientoEgreso = await db.movimiento.create({
+            descripción: "Transferencia a " + beneficiario.nombreReferencia,
+            billetera_id: billeteraOrigenId,
+            movReferencia: null,
+            montoMoneda: montoFloat,
+            tipo: "Egreso",
+            tarjeta_id: null,
+            cuentabanco_id: null,
+        });
+
+        const movimientoIngreso = await db.movimiento.create({
+            descripción: "Transferencia desde " + res.locals.user.nombre,
+            billetera_id: billeteraDestino.id,
+            movReferencia: movimientoEgreso.id,
+            montoMoneda: montoConvertido,
+            tipo: "Ingreso",
+            tarjeta_id: null,
+            cuentabanco_id: null,
+        });
+
+        // Actualizar los saldos de las billeteras
+        await billeteraOrigen.update({ saldo: saldoActualOrigen - montoFloat });
+        await billeteraDestino.update({ saldo: parseFloat(billeteraDestino.saldo) + montoConvertido });
+
+        // Actualizar el movimiento de egreso con la referencia
+        await movimientoEgreso.update({ movReferencia: movimientoIngreso.id });
+
+        res.status(201).send({ billeteraOrigen, billeteraDestino, movimientoEgreso, movimientoIngreso });
+    } catch (error) {
+        sendError500(res, error);
+    }
+};
+
+
+
+//este es el metodo que se encarga de hacer la transferencia de una billetera a otra pero no tiene la conversion 
+
+exports.transferir = async (req, res) => {
+    const { beneficiarioId, billeteraOrigenId, monto } = req.body;
+
+    try {
+        const beneficiario = await db.beneficiario.findByPk(beneficiarioId);
+        if (!beneficiario) {
+            return res.status(404).send({ message: "Beneficiario no encontrado" });
+        }
+
+        const billeteraOrigen = await db.billetera.findByPk(billeteraOrigenId);
+        if (!billeteraOrigen) {
+            return res.status(404).send({ message: "Billetera de origen no encontrada" });
+        }
+
+        const billeteraDestino = await db.billetera.findOne({ where: { código: beneficiario.numeroCuenta } });
+        if (!billeteraDestino) {
+            return res.status(404).send({ message: "Billetera de destino no encontrada" });
+        }
+
+        // Validar que ambas billeteras tengan la misma moneda
+        if (billeteraOrigen.moneda_id !== billeteraDestino.moneda_id) {
+            return res.status(400).send({ message: "No se puede transferir entre billeteras con diferentes monedas" });
+        }
+
+        const montoFloat = parseFloat(monto);
+        const saldoActualOrigen = parseFloat(billeteraOrigen.saldo);
+
+        if (saldoActualOrigen < montoFloat) {
+            return res.status(400).send({ message: "Saldo insuficiente en la billetera de origen" });
+        }
+
+        // Crear los movimientos de egreso e ingreso
+        const movimientoEgreso = await db.movimiento.create({
+            descripción: "Transferencia a " + beneficiario.nombreReferencia,
+            billetera_id: billeteraOrigenId,
+            movReferencia: null,
+            montoMoneda: montoFloat,
+            tipo: "Egreso",
+            tarjeta_id: null,
+            cuentabanco_id: null,
+        });
+
+        const movimientoIngreso = await db.movimiento.create({
+            descripción: "Transferencia desde " + res.locals.user.nombre,
+            billetera_id: billeteraDestino.id,
+            movReferencia: movimientoEgreso.id,
+            montoMoneda: montoFloat, // Mismo monto que se transfirió, ya que no hay conversión de moneda
+            tipo: "Ingreso",
+            tarjeta_id: null,
+            cuentabanco_id: null,
+        });
+
+        // Actualizar los saldos de las billeteras
+        await billeteraOrigen.update({ saldo: saldoActualOrigen - montoFloat });
+        await billeteraDestino.update({ saldo: parseFloat(billeteraDestino.saldo) + montoFloat });
+
+        // Actualizar el movimiento de egreso con la referencia
+        await movimientoEgreso.update({ movReferencia: movimientoIngreso.id });
+
+        res.status(201).send({ billeteraOrigen, billeteraDestino, movimientoEgreso, movimientoIngreso });
+    } catch (error) {
+        sendError500(res, error);
+    }
+};
+
+
+
+
+
+//crear moneda en venta sin la validacion de la moneda
+exports.createVenta = async (req, res) => {
+    const requiredFields = ["moneda_id", "valorVenta", "montoMoneda", "billeteraOrigen", "métodoPago"];
+    const fieldsWithErrors = checkRequiredFields(requiredFields, req.body);
+    if (fieldsWithErrors.length > 0) {
+        res.status(400).send({
+            message: `Faltan los siguientes campos: ${fieldsWithErrors.join(", ")}`
+        });
+        return;
+    }
+
+    try {
+        const userId = res.locals.user.id; // ID del usuario autenticado
+
+        // Verificar el saldo de la billeteraOrigen
+        const billeteraOrigen = await db.billetera.findByPk(req.body.billeteraOrigen);
+        if (!billeteraOrigen) {
+            res.status(404).send({ message: "Billetera de origen no encontrada" });
+            return;
+        }
+
+        if (parseFloat(req.body.montoMoneda) > parseFloat(billeteraOrigen.saldo)) {
+            res.status(400).send({ message: "El monto de la moneda supera el saldo disponible en la billetera de origen" });
+            return;
+        }
+
+        const nuevaVenta = await db.venta.create({
+            moneda_id: req.body.moneda_id,
+            valorVenta: req.body.valorVenta,
+            montoMoneda: req.body.montoMoneda,
+            billeteraOrigen: req.body.billeteraOrigen,
+            métodoPago: req.body.métodoPago,
+            estado: 'enVenta',
+            usuario_id: userId,
+        });
+
+        res.status(201).send(nuevaVenta);
+    } catch (error) {
+        sendError500(res, error);
+    }
+};
+
+
+
+
+//antiguo retirar---------------moneda
+exports.retirar = async (req, res) => {
+    const requiredFields = ["cuentabanco_id", "saldo"];
+    const fieldsWithErrors = checkRequiredFields(requiredFields, req.body);
+    if (fieldsWithErrors.length > 0) {
+        res.status(400).send({ message: `Faltan los siguientes campos: ${fieldsWithErrors.join(", ")}` });
+        return;
+    }
+    
+    const billeteraId = req.params.id;
+    const { cuentabanco_id, saldo } = req.body;
+    
+    try {
+        const billetera = await db.billetera.findByPk(billeteraId, { include: db.moneda });
+        if (!billetera) {
+            res.status(404).send({ message: "Billetera no encontrada" });
+            return;
+        }
+
+        const cuentaBanco = await db.cuentabanco.findByPk(cuentabanco_id);
+        if (!cuentaBanco || cuentaBanco.usuario_id !== res.locals.user.id) {
+            res.status(400).send({ message: "Cuenta bancaria no válida o no pertenece al usuario" });
+            return;
+        }
+
+        const montoFloat = parseFloat(saldo);
+        const saldoActual = parseFloat(billetera.saldo);
+
+        if (saldoActual < montoFloat) {
+            res.status(400).send({ message: "Saldo insuficiente" });
+            return;
+        }
+
+        // Convertir el monto de la moneda de la billetera a dólares
+        const montoEnDolares = montoFloat * parseFloat(billetera.moneda.valorUsd);
+
+        // Convertir los dólares a bolivianos (si es necesario)
+        const montoEnBolivianos = montoEnDolares * 7; // Ejemplo de conversión a bolivianos
+
+        const nuevoSaldo = saldoActual - montoFloat;
+
+        await billetera.update({ saldo: nuevoSaldo });
+
+        const movimiento = await db.movimiento.create({
+            descripción: "Retiro",
+            billetera_id: billeteraId,
+            movReferencia: null, // `null` para retiros
+            montoMoneda: montoFloat, // Monto en la moneda de la billetera
+            tipo: "Egreso",
+            tarjeta_id: null,
+            cuentabanco_id: cuentabanco_id
+        });
+
+        // Mostrar información de debugging en consola basado en la moneda de la cuenta bancaria
+        if (cuentaBanco.moneda) {
+            console.log(`Retiraste ${montoFloat} USD`);
+        } else {
+            console.log(`Retiraste ${montoEnBolivianos} BS`);
+        }
+
+        res.status(201).send({ billetera, movimiento });
+    } catch (error) {
+        sendError500(res, error);
+    }
+};
+
+
+
+//////////////////////////////////////777
+codigo de transferencia sin verificar las monedas que estan en la venta :
+
+exports.transferir = async (req, res) => {
+    const { beneficiarioId, billeteraOrigenId, monto } = req.body;
+
+    try {
+        const beneficiario = await db.beneficiario.findByPk(beneficiarioId);
+        if (!beneficiario) {
+            return res.status(404).send({ message: "Beneficiario no encontrado" });
+        }
+
+        const billeteraOrigen = await db.billetera.findByPk(billeteraOrigenId);
+        if (!billeteraOrigen) {
+            return res.status(404).send({ message: "Billetera de origen no encontrada" });
+        }
+
+        const billeteraDestino = await db.billetera.findOne({ where: { código: beneficiario.numeroCuenta } });
+        if (!billeteraDestino) {
+            return res.status(404).send({ message: "Billetera de destino no encontrada" });
+        }
+
+        // Validar que ambas billeteras tengan la misma moneda
+        if (billeteraOrigen.moneda_id !== billeteraDestino.moneda_id) {
+            return res.status(400).send({ message: "No se puede transferir entre billeteras con diferentes monedas" });
+        }
+
+        const montoFloat = parseFloat(monto);
+        const saldoActualOrigen = parseFloat(billeteraOrigen.saldo);
+
+        if (saldoActualOrigen < montoFloat) {
+            return res.status(400).send({ message: "Saldo insuficiente en la billetera de origen" });
+        }
+
+        // Crear los movimientos de egreso e ingreso
+        const movimientoEgreso = await db.movimiento.create({
+            descripción: "Transferencia a " + beneficiario.nombreReferencia,
+            billetera_id: billeteraOrigenId,
+            movReferencia: null,
+            montoMoneda: montoFloat,
+            tipo: "Egreso",
+            tarjeta_id: null,
+            cuentabanco_id: null,
+        });
+
+        const movimientoIngreso = await db.movimiento.create({
+            descripción: "Transferencia desde " + res.locals.user.id,
+            billetera_id: billeteraDestino.id,
+            movReferencia: movimientoEgreso.id,
+            montoMoneda: montoFloat, // Mismo monto que se transfirió, ya que no hay conversión de moneda
+            tipo: "Ingreso",
+            tarjeta_id: null,
+            cuentabanco_id: null,
+        });
+
+        // Actualizar los saldos de las billeteras
+        await billeteraOrigen.update({ saldo: saldoActualOrigen - montoFloat });
+        await billeteraDestino.update({ saldo: parseFloat(billeteraDestino.saldo) + montoFloat });
+
+        // Actualizar el movimiento de egreso con la referencia
+        await movimientoEgreso.update({ movReferencia: movimientoIngreso.id });
+
+        res.status(201).send({ billeteraOrigen, billeteraDestino, movimientoEgreso, movimientoIngreso });
+    } catch (error) {
+        sendError500(res, error);
+    }
+};
