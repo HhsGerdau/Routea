@@ -22,7 +22,7 @@ db.propiedad = require("./propiedad.model")(sequelize, Sequelize);
 db.ciudad = require("./ciudad.model")(sequelize, Sequelize);
 db.reserva = require("./reserva.model")(sequelize, Sequelize);
 db.paqueteturistico = require("./paquetesturisticos.model")(sequelize, Sequelize);
-db.sitioturistico = require("./sitioturistico.model")(sequelize, Sequelize);
+db.sitioturistico = require("./sitiosturisticos.model")(sequelize, Sequelize);
 
 
 db.ciudad.hasMany(db.propiedad, { foreignKey: "ciudadId", onDelete: "CASCADE" });

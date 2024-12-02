@@ -7,7 +7,7 @@ module.exports = app => {
     require("./reserva.routes")(app);
     require("./paquetesturisticos.routes")(app);
     require("./paquetereserva.routes")(app);
-    require("./sitioturistico.routes")(app);
+    require("./sitiosturisticos.routes")(app);
 
    
 

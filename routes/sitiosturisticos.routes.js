@@ -1,5 +1,5 @@
 module.exports = app => {
-    const controller = require("../controllers/sitioturistico.controller.js");
+    const controller = require("../controllers/sitiosturisticos.controller.js");
     let router = require("express").Router();
 
     // Listar todos los Sitios Turísticos
@@ -18,5 +18,5 @@ module.exports = app => {
     router.delete("/:id", controller.deleteSitioTuristico);
 
     // Registrar las rutas bajo el prefijo `/api/sitiosturisticos`
-    app.use('/api/sitioturistico', router);
+    app.use('/api/sitiosturisticos', router);
 };
