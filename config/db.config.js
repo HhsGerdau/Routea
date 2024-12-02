@@ -4,4 +4,5 @@ module.exports = {
     PASSWORD: "JTkZZOPReujSkLReRzYDRnDcrpqzfFOW",
     DB: "railway",
     PORT:"3306",
+    dialect: "mysql",
 }
