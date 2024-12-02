@@ -1,8 +1,14 @@
+require('dotenv').config();  
+
 module.exports = {
-    HOST: "mysql-mvw5.railway.internal",
-    USER: "root",
-    PASSWORD: "JTkZZOPReujSkLReRzYDRnDcrpqzfFOW",
-    DB: "railway",
-    PORT:"3306",
-    dialect: "mysql",
-}
+    HOST: process.env.DB_HOST,
+    USER: process.env.DB_USER,
+    PASSWORD: process.env.DB_PASSWORD,
+    DB: process.env.DB_NAME,
+    PORT: process.env.DB_PORT,
+    dialect: 'mysql',
+    define: {
+        timestamps: false, 
+    }
+};
+
