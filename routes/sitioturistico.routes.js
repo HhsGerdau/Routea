@@ -18,5 +18,5 @@ module.exports = app => {
     router.delete("/:id", controller.deleteSitioTuristico);
 
     // Registrar las rutas bajo el prefijo `/api/sitiosturisticos`
-    app.use('/api/sitiosturisticos', router);
+    app.use('/api/sitioturistico', router);
 };
