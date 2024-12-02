@@ -22,6 +22,7 @@ db.propiedad = require("./propiedad.model")(sequelize, Sequelize);
 db.ciudad = require("./ciudad.model")(sequelize, Sequelize);
 db.reserva = require("./reserva.model")(sequelize, Sequelize);
 db.paqueteturistico = require("./paquetesturisticos.model")(sequelize, Sequelize);
+db.sitioturistico = require("./sitioturistico.model")(sequelize, Sequelize);
 
 
 db.ciudad.hasMany(db.propiedad, { foreignKey: "ciudadId", onDelete: "CASCADE" });
@@ -41,6 +42,9 @@ db.paqueteturistico.belongsTo(db.usuario, { foreignKey: "usuario_id" });
 
 db.ciudad.hasMany(db.paqueteturistico, { foreignKey: "ciudadId", onDelete: "CASCADE" });
 db.paqueteturistico.belongsTo(db.ciudad, { foreignKey: "ciudadId" });
+
+db.ciudad.hasMany(db.sitioturistico, { foreignKey: "ciudadId", onDelete: "CASCADE" });
+db.sitioturistico.belongsTo(db.ciudad, { foreignKey: "ciudadId" });
 
 //paque turistico con reserva
 db.paqueteturistico.hasMany(db.reserva, { foreignKey: "paqueteId", onDelete: "CASCADE" });

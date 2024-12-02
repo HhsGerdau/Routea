@@ -2,18 +2,21 @@ module.exports = app => {
     const controller = require("../controllers/sitioturistico.controller.js");
     let router = require("express").Router();
 
-    // Listar todos los sitios turísticos
-    router.get("/", controller.listSitioTuristico);
+    // Listar todos los Sitios Turísticos
+    router.get("/", controller.listSitiosTuristicos);
 
-    // Obtener un sitio turístico por ID
+    // Obtener un Sitio Turístico por ID
     router.get("/:id", controller.getSitioTuristico);
 
-    // Crear un nuevo sitio turístico
+    // Crear un nuevo Sitio Turístico
     router.post("/", controller.createSitioTuristico);
 
-    // Eliminar un sitio turístico por ID
+    // Actualizar un Sitio Turístico
+    router.put("/:id", controller.updateSitioTuristico);
+
+    // Eliminar un Sitio Turístico
     router.delete("/:id", controller.deleteSitioTuristico);
 
-    // Registrar las rutas con el prefijo '/api/sitiosturisticos'
-    app.use('/api/sitioturistico', router);
+    // Registrar las rutas bajo el prefijo `/api/sitiosturisticos`
+    app.use('/api/sitiosturisticos', router);
 };

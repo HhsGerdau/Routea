@@ -5,21 +5,19 @@ module.exports = (sequelize, Sequelize) => {
         },
         nombre: {
             type: Sequelize.STRING,
-            allowNull: false, // Aseguramos que el nombre sea obligatorio
+            allowNull: false,
         },
         descripcion: {
-            type: Sequelize.TEXT, // Para permitir descripciones más largas
+            type: Sequelize.STRING,
         },
         latitud: {
             type: Sequelize.STRING,
-            allowNull: false, // Aseguramos que la latitud sea obligatoria
         },
         longitud: {
             type: Sequelize.STRING,
-            allowNull: false, // Aseguramos que la longitud sea obligatoria
         },
         imagenes: {
-            type: Sequelize.JSON, // Almacenar las imágenes como un arreglo JSON
+            type: Sequelize.JSON,
         },
         sitioImagenUrl: {
             type: Sequelize.VIRTUAL,
@@ -33,7 +31,7 @@ module.exports = (sequelize, Sequelize) => {
                     imagenes = [];
                 }
 
-                // Generar URLs completas para las imágenes
+                // Generar las URLs completas de las imágenes
                 return Array.isArray(imagenes)
                     ? imagenes.map(imagen => `https://routea-production.up.railway.app/img/sitioturistico/${imagen}`)
                     : [];
