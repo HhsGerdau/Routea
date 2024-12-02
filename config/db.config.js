@@ -1,8 +1,8 @@
 module.exports = {
-    HOST: "mysql-mvw5.railway.internal",
+    HOST: "autorack.proxy.rlwy.net",
     USER: "root",
     PASSWORD: "JTkZZOPReujSkLReRzYDRnDcrpqzfFOW",
     DB: "railway",
-    PORT:"3306",
+    PORT:"57715",
     dialect: "mysql",
 }
