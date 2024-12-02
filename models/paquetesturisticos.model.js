@@ -39,7 +39,7 @@ module.exports = (sequelize, Sequelize) => {
 
                 // Retornar las URLs de las imágenes almacenadas
                 return Array.isArray(imagenes)
-                    ? imagenes.map(imagen => `http://localhost:3001/img/paqueteturistico/${imagen}`)
+                    ? imagenes.map(imagen => `https://routea-production.up.railway.app/img/paqueteturistico/${imagen}`)
                     : [];
             },
         },

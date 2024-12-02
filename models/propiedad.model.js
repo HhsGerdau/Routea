@@ -53,7 +53,7 @@ module.exports = (sequelize, Sequelize) => {
                 }
         
                 return Array.isArray(imagenes)
-                    ? imagenes.map(imagen => `http://localhost:3001/img/propiedad/${imagen}`)
+                    ? imagenes.map(imagen => `https://routea-production.up.railway.app/img/propiedad/${imagen}`)
                     : [];
             },
         },
