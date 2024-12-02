@@ -1,8 +1,7 @@
 module.exports = {
-    HOST: "autorack.proxy.rlwy.net",
+    HOST: "mysql-mvw5.railway.internal",
     USER: "root",
     PASSWORD: "JTkZZOPReujSkLReRzYDRnDcrpqzfFOW",
-    DB: "apiconpaypalpaquetes",
-    dialect: "mysql",
+    DB: "railway",
+    PORT:"3306",
 }
-//mysql://root:JTkZZOPReujSkLReRzYDRnDcrpqzfFOW@autorack.proxy.rlwy.net:57715/railway
