@@ -9,6 +9,5 @@ module.exports = app => {
     require("./paquetereserva.routes")(app);
     require("./sitiosturisticos.routes")(app);
 
-   
 
 }
